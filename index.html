@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>オンライン○×ゲーム</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    .board { display: grid; grid-template-columns: repeat(3, 80px); gap: 5px; }
+    .cell { width: 80px; height: 80px; font-size: 40px; text-align: center; line-height: 80px; border: 1px solid #333; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>オンライン○×ゲーム</h1>
+  <input id="roomId" placeholder="ルームID">
+  <button onclick="join()">参加</button>
+  <div class="board" id="board"></div>
+
+  <script>
+    const socket = io("https://cdn.socket.io/4.7.2/socket.io.min.js");
+    let roomId = null;
+
+    function join() {
+      roomId = document.getElementById("roomId").value;
+      socket.emit("joinRoom", roomId);
+    }
+
+    const boardDiv = document.getElementById("board");
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.index = i;
+      cell.onclick = () => {
+        if (roomId) socket.emit("move", { roomId, index: i });
+      };
+      boardDiv.appendChild(cell);
+    }
+
+    socket.on("state", (game) => {
+      document.querySelectorAll(".cell").forEach((cell, i) => {
+        cell.textContent = game.board[i] || "";
+      });
+    });
+  </script>
+</body>
+</html>
