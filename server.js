@@ -1,37 +1,48 @@
-// server.js
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
-// 各ルームのゲーム状態を保持
 const rooms = {};
+
+function generateRoomId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// 静的ファイルを配信（フロントHTML置く用）
+app.use(express.static("public"));
 
 io.on("connection", (socket) => {
   console.log("user connected:", socket.id);
 
-  socket.on("joinRoom", (roomId) => {
+  socket.on("createRoom", () => {
+    const roomId = generateRoomId();
+    rooms[roomId] = { board: Array(9).fill(null), turn: "X" };
     socket.join(roomId);
-    if (!rooms[roomId]) {
-      rooms[roomId] = { board: Array(9).fill(null), turn: "X" };
-    }
+    socket.emit("roomCreated", roomId);
     io.to(roomId).emit("state", rooms[roomId]);
+  });
+
+  socket.on("joinRoom", (roomId) => {
+    if (rooms[roomId]) {
+      socket.join(roomId);
+      socket.emit("roomJoined", roomId);
+      io.to(roomId).emit("state", rooms[roomId]);
+    } else {
+      socket.emit("error", "ルームが存在しません");
+    }
   });
 
   socket.on("move", ({ roomId, index }) => {
     const game = rooms[roomId];
-    if (!game) return;
+    if (!game || game.board[index]) return;
 
-    if (!game.board[index]) {
-      game.board[index] = game.turn;
-      game.turn = game.turn === "X" ? "O" : "X";
-      io.to(roomId).emit("state", game);
-    }
+    game.board[index] = game.turn;
+    game.turn = game.turn === "X" ? "O" : "X";
+    io.to(roomId).emit("state", game);
   });
 
   socket.on("disconnect", () => {
@@ -40,6 +51,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Server running on " + PORT);
-});
+server.listen(PORT, () => console.log("Server running on port", PORT));
