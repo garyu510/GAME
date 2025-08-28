@@ -1,45 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>オンライン○×ゲーム</title>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <style>
-    .board { display: grid; grid-template-columns: repeat(3, 80px); gap: 5px; }
-    .cell { width: 80px; height: 80px; font-size: 40px; text-align: center; line-height: 80px; border: 1px solid #333; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<title>オンライン○×ゲーム</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+  .board { display:grid; grid-template-columns:repeat(3, 80px); gap:5px; margin-top:10px; }
+  .cell { width:80px; height:80px; font-size:40px; text-align:center; line-height:80px; border:1px solid #333; cursor:pointer; }
+  button { margin:5px; }
+</style>
 </head>
 <body>
-  <h1>オンライン○×ゲーム</h1>
-  <input id="roomId" placeholder="ルームID">
-  <button onclick="join()">参加</button>
-  <div class="board" id="board"></div>
+<h1>オンライン○×ゲーム</h1>
+<button id="createBtn">ルーム作成</button>
+<div id="linkDiv"></div>
+<div class="board" id="board"></div>
 
-  <script>
-    const socket = io("https://cdn.socket.io/4.7.2/socket.io.min.js");
-    let roomId = null;
+<script>
+const socket = io();
+let roomId = null;
 
-    function join() {
-      roomId = document.getElementById("roomId").value;
-      socket.emit("joinRoom", roomId);
-    }
+document.getElementById("createBtn").onclick = () => {
+  socket.emit("createRoom");
+};
 
-    const boardDiv = document.getElementById("board");
-    for (let i = 0; i < 9; i++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.dataset.index = i;
-      cell.onclick = () => {
-        if (roomId) socket.emit("move", { roomId, index: i });
-      };
-      boardDiv.appendChild(cell);
-    }
+socket.on("roomCreated", (id) => {
+  roomId = id;
+  const url = `${location.origin}${location.pathname}?room=${roomId}`;
+  document.getElementById("linkDiv").innerHTML = `
+    ルーム作成！URLを友達に共有：<a href="${url}" target="_blank">${url}</a>
+  `;
+});
 
-    socket.on("state", (game) => {
-      document.querySelectorAll(".cell").forEach((cell, i) => {
-        cell.textContent = game.board[i] || "";
-      });
-    });
-  </script>
+socket.on("roomJoined", (id) => {
+  roomId = id;
+  document.getElementById("linkDiv").textContent = `ルーム ${roomId} に参加しました`;
+});
+
+// URLから自動参加
+const params = new URLSearchParams(location.search);
+const urlRoom = params.get("room");
+if(urlRoom){
+  socket.emit("joinRoom", urlRoom);
+}
+
+const boardDiv = document.getElementById("board");
+for(let i=0;i<9;i++){
+  const cell = document.createElement("div");
+  cell.className="cell";
+  cell.dataset.index=i;
+  cell.onclick = () => {
+    if(roomId) socket.emit("move", { roomId, index:i });
+  };
+  boardDiv.appendChild(cell);
+}
+
+socket.on("state", (game)=>{
+  document.querySelectorAll(".cell").forEach((cell,i)=>{
+    cell.textContent = game.board[i] || "";
+  });
+});
+</script>
 </body>
 </html>
