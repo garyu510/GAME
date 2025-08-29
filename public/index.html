@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>ã‚ªãƒ³ãƒ©ã‚¤ãƒ³â—‹Ã—ã‚²ãƒ¼ãƒ </title>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<style>
-  .board { display:grid; grid-template-columns:repeat(3, 80px); gap:5px; margin-top:10px; }
-  .cell { width:80px; height:80px; font-size:40px; text-align:center; line-height:80px; border:1px solid #333; cursor:pointer; }
-  button { margin:5px; }
-</style>
+    <meta charset="UTF-8">
+    <title>ƒIƒ“ƒ‰ƒCƒ“›~ƒQ[ƒ€</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            font-size: 40px;
+            text-align: center;
+            line-height: 80px;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        button {
+            margin: 5px;
+        }
+    </style>
 </head>
 <body>
-<h1>ã‚ªãƒ³ãƒ©ã‚¤ãƒ³â—‹Ã—ã‚²ãƒ¼ãƒ </h1>
-<button id="createBtn">ãƒ«ãƒ¼ãƒ ä½œæˆ</button>
-<div id="linkDiv"></div>
-<div class="board" id="board"></div>
+    <h1>ƒIƒ“ƒ‰ƒCƒ“›~ƒQ[ƒ€</h1>
+    <button id="createBtn">ƒ‹[ƒ€ì¬</button>
+    <div id="linkDiv"></div>
+    <div class="board" id="board"></div>
 
-<script>
+    <script>
 const socket = io();
 let roomId = null;
 
@@ -28,16 +45,16 @@ socket.on("roomCreated", (id) => {
   roomId = id;
   const url = `${location.origin}${location.pathname}?room=${roomId}`;
   document.getElementById("linkDiv").innerHTML = `
-    ãƒ«ãƒ¼ãƒ ä½œæˆï¼URLã‚’å‹é”ã«å…±æœ‰ï¼š<a href="${url}" target="_blank">${url}</a>
+    ƒ‹[ƒ€ì¬IURL‚ğ—F’B‚É‹¤—LF<a href="${url}" target="_blank">${url}</a>
   `;
 });
 
 socket.on("roomJoined", (id) => {
   roomId = id;
-  document.getElementById("linkDiv").textContent = `ãƒ«ãƒ¼ãƒ  ${roomId} ã«å‚åŠ ã—ã¾ã—ãŸ`;
+  document.getElementById("linkDiv").textContent = `ƒ‹[ƒ€ ${roomId} ‚ÉQ‰Á‚µ‚Ü‚µ‚½`;
 });
 
-// URLã‹ã‚‰è‡ªå‹•å‚åŠ 
+// URL‚©‚ç©“®Q‰Á
 const params = new URLSearchParams(location.search);
 const urlRoom = params.get("room");
 if(urlRoom){
@@ -60,6 +77,6 @@ socket.on("state", (game)=>{
     cell.textContent = game.board[i] || "";
   });
 });
-</script>
+    </script>
 </body>
 </html>
